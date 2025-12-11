@@ -1,46 +1,32 @@
-using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+
+using FeatureFlags.ClientSdk;
+
 using Microsoft.Extensions.Options;
-using OpenFeature.Contrib.Providers.Gitlab.Extensions;
-using OpenFeature.Contrib.Providers.Gitlab.Options;
+
+using OpenFeature.Contrib.Providers.FeatureFlagger.Extensions;
+using OpenFeature.Contrib.Providers.FeatureFlagger.Options;
 using OpenFeature.Model;
-using Unleash;
-using Unleash.ClientFactory;
 
-namespace OpenFeature.Contrib.Providers.Gitlab;
+namespace OpenFeature.Contrib.Providers.FeatureFlagger.Providers;
 
-public sealed class GitlabProvider : FeatureProvider
+public sealed class FeatureFlaggerProvider : FeatureProvider
 {
-    private readonly Metadata _metadata = new Metadata("Gitlab Provider");
-    private readonly UnleashSettings _unleashSettings;
-    private readonly UnleashClientFactory _unleashClientFactory;
+    private readonly Metadata _metadata = new Metadata("Feature Flagger Provider");
+    private readonly FeaturesClient _featuresClient;
 
-    public GitlabProvider(IOptions<GitlabOptions> options)
+    public FeatureFlaggerProvider(IOptions<FlaggerOptions> options, HttpClient httpClient)
     {
-        var settings = options.Value;
-        this._unleashClientFactory = new UnleashClientFactory();
-
-        if (settings.isProxyActive)
+        var settings = new FeaturesClientSettings()
         {
-            this._unleashSettings = new UnleashSettings
-            {
-                UnleashApi = new Uri(settings.ApiUrl),
-                CustomHttpHeaders =
-                {
-                    { "Authorization", settings.ApiKey }
-                }
-            };
-
-            return;
-        }
-
-        this._unleashSettings = new UnleashSettings
-        {
-            UnleashApi = new Uri(settings.ApiUrl),
-            InstanceTag = settings.InstanceId,
-            AppName = settings.ProjectName,
+            AppName = options.Value.AppName,
+            ProjectId = options.Value.ApplicationId,
+            InstanceId = options.Value.InstanceId,
         };
+
+        this._featuresClient = new FeaturesClient(settings, httpClient);
     }
 
     public override Metadata GetMetadata() => _metadata;
@@ -50,11 +36,9 @@ public sealed class GitlabProvider : FeatureProvider
         EvaluationContext context = null,
         CancellationToken cancellationToken = new CancellationToken())
     {
-        var client = await _unleashClientFactory.CreateClientAsync(_unleashSettings).ConfigureAwait(false);
+        var result = await _featuresClient.IsEnabledAsync(flagKey, context.ToFlagContext()).ConfigureAwait(false);
 
-        var unleashResult = client.IsEnabled(flagKey, context.ToUnleashContext(), defaultValue);
-
-        return new ResolutionDetails<bool>(flagKey, unleashResult);
+        return new ResolutionDetails<bool>(flagKey, result);
     }
 
     public override Task<ResolutionDetails<string>> ResolveStringValueAsync(string flagKey, string defaultValue, EvaluationContext context = null,

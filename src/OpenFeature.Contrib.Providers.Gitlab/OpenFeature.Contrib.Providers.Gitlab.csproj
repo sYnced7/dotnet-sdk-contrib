@@ -1,19 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>OpenFeature.Contrib.MyComponent</PackageId>
-    <VersionNumber>0.0.1</VersionNumber> <!--x-release-please-version -->
+    <PackageId>OpenFeature.Contrib.FeatureFlagger</PackageId>
+    <VersionNumber>0.0.1</VersionNumber>
     <VersionPrefix>$(VersionNumber)</VersionPrefix>
     <AssemblyVersion>$(VersionNumber)</AssemblyVersion>
     <FileVersion>$(VersionNumber)</FileVersion>
-    <Description>Gitlab provider for .net!</Description>
+    <Description>A gitlab feature flag provider for .net!</Description>
     <Authors>Helder Rodrigues</Authors>
+    <AssemblyName>OpenFeature.Contrib.Providers.FeatureFlagger</AssemblyName>
+    <RootNamespace>OpenFeature.Contrib.Providers.FeatureFlagger</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.0" />
+    <PackageReference Include="FeatureFlagger.ClientSdk" Version="0.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.1" />
     <PackageReference Include="OpenFeature" Version="2.9.0" />
-    <PackageReference Include="Unleash.Client" Version="5.5.3" />
   </ItemGroup>
 
 </Project>
